@@ -154,16 +154,34 @@ class SQLValidator:
         return ValidationResult(is_valid=True)
     
     def _has_multiple_statements(self, parsed_query) -> bool:
-        """Check if query contains multiple statements"""
-        statement_count = 0
-        for token in parsed_query.tokens:
-            if token.ttype is None and str(token).strip():
-                statement_count += 1
-            elif token.ttype in (tokens.Keyword.DML, tokens.Keyword):
-                if str(token).upper() in ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER']:
-                    statement_count += 1
+        """Check if query contains multiple statements (semicolon-separated)"""
+        # Count semicolons that separate statements
+        query_str = str(parsed_query).strip()
         
-        return statement_count > 1
+        # Remove trailing semicolon if present
+        if query_str.endswith(';'):
+            query_str = query_str[:-1]
+        
+        # Check for semicolons that indicate multiple statements
+        semicolon_count = query_str.count(';')
+        
+        # Also check for multiple DML/DDL keywords that could indicate multiple statements
+        statement_keywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'TRUNCATE']
+        keyword_count = 0
+        
+        for keyword in statement_keywords:
+            # Use word boundaries to avoid counting keywords within strings or identifiers
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            matches = re.findall(pattern, query_str.upper())
+            keyword_count += len(matches)
+        
+        # Consider it multiple statements if there are semicolons OR multiple statement keywords
+        # Exception: WITH clauses can have multiple SELECT keywords
+        if query_str.upper().strip().startswith('WITH'):
+            # For CTEs, allow multiple SELECT keywords
+            return semicolon_count > 0
+        
+        return semicolon_count > 0 or keyword_count > 1
     
     def _get_query_type(self, parsed_query) -> QueryType:
         """Determine the type of SQL query"""
