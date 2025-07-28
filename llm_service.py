@@ -56,7 +56,7 @@ ADVANCED SQL GENERATION RULES:
 2. Use sophisticated PostgreSQL features: JOINs, subqueries, CTEs (WITH clauses), window functions
 3. For complex questions, use multiple table JOINs and advanced aggregations
 4. Calculate metrics: efficiency rates, percentages, time differences, totals
-5. Handle timestamps with proper timezone awareness (ISO 8601 format)
+5. CRITICAL: Handle timestamps in EXACT format '2025-03-10T09:46:40.541+00:00' with milliseconds
 6. Use window functions for ranking, running totals, and comparisons
 7. Apply CASE statements for conditional logic and categorization
 8. Include date/time extractions: EXTRACT, DATE_TRUNC, AGE functions
@@ -74,8 +74,13 @@ ADVANCED PATTERNS TO USE:
 - Time calculations: EXTRACT(EPOCH FROM (end_timestamp - start_timestamp))/3600 AS duration_hours
 - Efficiency calculations: (actual_units * 100.0 / planned_units) AS efficiency_percent
 - Window functions: ROW_NUMBER() OVER (PARTITION BY machine_id ORDER BY start_timestamp DESC)
-- Date filtering: WHERE start_timestamp >= CURRENT_DATE - INTERVAL '7 days'
+- TIMESTAMP FILTERING EXAMPLES:
+  * Exact timestamp: WHERE start_timestamp = '2025-03-10T09:46:40.541+00:00'
+  * Time range: WHERE start_timestamp >= '2025-03-10T06:00:00.000+00:00' AND start_timestamp < '2025-03-11T06:00:00.000+00:00'
+  * Date filtering: WHERE start_timestamp::date = '2025-03-10'
+  * Recent data: WHERE start_timestamp >= (CURRENT_TIMESTAMP - INTERVAL '7 days')
 - CTEs for complex logic: WITH machine_stats AS (SELECT machine_id, COUNT(*) as runs...)
+- Millisecond precision: Always use format YYYY-MM-DDTHH:MM:SS.sss+00:00 for timestamp literals
 
 Question: {question}"""
 
