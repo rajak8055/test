@@ -9,6 +9,14 @@ from typing import List, Dict, Any, Optional
 import logging
 from contextlib import asynccontextmanager
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not installed, skip loading .env file
+    pass
+
 from database import DatabaseManager
 from validators import SQLValidator
 from llm_service import GroqLLMService
@@ -45,17 +53,35 @@ async def lifespan(app: FastAPI):
     global db_manager, sql_validator, llm_service
     
     try:
-        # Initialize services
+        # Initialize services with detailed logging
+        logger.info("Initializing database manager...")
         db_manager = DatabaseManager()
+        
+        logger.info("Attempting database connection...")
         await db_manager.connect()
         
+        logger.info("Initializing SQL validator...")
         sql_validator = SQLValidator()
+        
+        logger.info("Initializing LLM service...")
         llm_service = GroqLLMService()
         
         logger.info("Application startup completed successfully")
         yield
     except Exception as e:
         logger.error(f"Failed to initialize application: {e}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {str(e)}")
+        
+        # Try to provide more helpful error information
+        if "password authentication failed" in str(e):
+            logger.error("Database connection failed - check your credentials:")
+            logger.error(f"DATABASE_URL exists: {bool(os.getenv('DATABASE_URL'))}")
+            logger.error(f"PGHOST: {os.getenv('PGHOST', 'not set')}")
+            logger.error(f"PGUSER: {os.getenv('PGUSER', 'not set')}")
+            logger.error(f"PGDATABASE: {os.getenv('PGDATABASE', 'not set')}")
+            logger.error(f"PGPORT: {os.getenv('PGPORT', 'not set')}")
+        
         raise
     finally:
         # Shutdown

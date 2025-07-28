@@ -4,7 +4,7 @@
 
 ### Method 1: Using pip
 ```bash
-pip install fastapi uvicorn asyncpg sqlparse aiohttp python-multipart jinja2
+pip install fastapi uvicorn asyncpg sqlparse aiohttp python-multipart jinja2 python-dotenv
 ```
 
 ### Method 2: Using requirements.txt
@@ -81,3 +81,39 @@ The server will start on http://localhost:5000
 - SQL injection protection
 - Dangerous operation blocking (DROP, DELETE, TRUNCATE, etc.)
 - Query validation and sanitization
+
+## Troubleshooting Database Connection Issues
+
+### Test Your Connection First
+```bash
+python test_connection.py
+```
+
+### Common Issues and Solutions
+
+1. **"password authentication failed for user 'postgres'"**
+   - Verify your PostgreSQL credentials
+   - Make sure PostgreSQL service is running
+   - Test connection with psql: `psql -h localhost -U postgres -d postgres`
+
+2. **Environment Variables Not Loading**
+   - Create a `.env` file in your project root
+   - Install python-dotenv: `pip install python-dotenv`
+   - Copy from `.env.example` and update with your values
+
+3. **Connection Works in Test but Fails in Main App**
+   - Ensure `.env` file is in the same directory as `main.py`
+   - Check that python-dotenv is installed
+   - Verify no typos in environment variable names
+
+4. **Different Behavior from Other Projects**
+   - Check if other projects use different connection libraries
+   - Ensure same PostgreSQL version and configuration
+   - Compare environment variable names and formats
+
+### Example .env File
+```env
+# Copy your working credentials from other projects
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/your_database
+GROQ_API_KEY=your_groq_api_key
+```
