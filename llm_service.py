@@ -188,9 +188,10 @@ Question: {question}"""
             if response.endswith(suffix):
                 response = response[:-len(suffix)].strip()
         
-        # Basic validation - should start with SELECT
-        if not response.upper().strip().startswith('SELECT'):
-            logger.warning(f"Generated query doesn't start with SELECT: {response}")
+        # Basic validation - should start with SELECT or WITH (for CTEs)
+        query_upper = response.upper().strip()
+        if not (query_upper.startswith('SELECT') or query_upper.startswith('WITH')):
+            logger.warning(f"Generated query doesn't start with SELECT or WITH: {response}")
             return None
         
         # Add semicolon if not present

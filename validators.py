@@ -167,6 +167,11 @@ class SQLValidator:
     
     def _get_query_type(self, parsed_query) -> QueryType:
         """Determine the type of SQL query"""
+        # Handle WITH clauses (CTEs) - they are SELECT queries
+        query_str = str(parsed_query).upper().strip()
+        if query_str.startswith('WITH'):
+            return QueryType.SELECT
+        
         for token in parsed_query.tokens:
             if token.ttype is tokens.Keyword.DML:
                 keyword = str(token).upper()
