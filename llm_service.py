@@ -11,7 +11,16 @@ class GroqLLMService:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY", "")
         self.base_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "mixtral-8x7b-32768"  # Groq's Mixtral model
+        
+        # Try different models in order of preference
+        self.available_models = [
+            "llama-3.1-70b-versatile",
+            "llama-3.1-8b-instant", 
+            "mixtral-8x7b-32768",
+            "llama3-70b-8192",
+            "gemma2-9b-it"
+        ]
+        self.model = self.available_models[0]  # Start with the best model
         
         if not self.api_key:
             logger.warning("GROQ_API_KEY not found in environment variables")
@@ -64,7 +73,7 @@ Question: {question}"""
         return prompt
     
     async def _call_groq_api(self, prompt: str) -> Optional[str]:
-        """Make API call to Groq"""
+        """Make API call to Groq with automatic model fallback"""
         if not self.api_key:
             logger.error("GROQ_API_KEY is required but not provided")
             return None
@@ -74,53 +83,62 @@ Question: {question}"""
             "Content-Type": "application/json"
         }
         
-        payload = {
-            "model": self.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are an expert PostgreSQL developer. Generate safe, efficient SELECT queries only. Return only the SQL query without any additional text or formatting."
-                },
-                {
-                    "role": "user", 
-                    "content": prompt
-                }
-            ],
-            "max_tokens": 1000,
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "stream": False
-        }
-        
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    self.base_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=30)
-                ) as response:
-                    
-                    if response.status == 200:
-                        data = await response.json()
+        # Try each model until one works
+        for model_name in self.available_models:
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert PostgreSQL developer. Generate safe, efficient SELECT queries only. Return only the SQL query without any additional text or formatting."
+                    },
+                    {
+                        "role": "user", 
+                        "content": prompt
+                    }
+                ],
+                "max_tokens": 1000,
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "stream": False
+            }
+            
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        self.base_url,
+                        headers=headers,
+                        json=payload,
+                        timeout=aiohttp.ClientTimeout(total=30)
+                    ) as response:
                         
-                        if "choices" in data and len(data["choices"]) > 0:
-                            content = data["choices"][0]["message"]["content"]
-                            return content.strip()
+                        if response.status == 200:
+                            data = await response.json()
+                            
+                            if "choices" in data and len(data["choices"]) > 0:
+                                content = data["choices"][0]["message"]["content"]
+                                # Update the working model for future requests
+                                if self.model != model_name:
+                                    logger.info(f"Switched to working model: {model_name}")
+                                    self.model = model_name
+                                return content.strip()
+                            else:
+                                logger.error(f"No choices in Groq API response for model {model_name}")
                         else:
-                            logger.error("No choices in Groq API response")
-                            return None
-                    else:
-                        error_text = await response.text()
-                        logger.error(f"Groq API error {response.status}: {error_text}")
-                        return None
-                        
-        except asyncio.TimeoutError:
-            logger.error("Groq API request timed out")
-            return None
-        except Exception as e:
-            logger.error(f"Groq API request failed: {e}")
-            return None
+                            error_text = await response.text()
+                            logger.warning(f"Model {model_name} failed: {response.status} - {error_text}")
+                            # Try next model
+                            continue
+                            
+            except asyncio.TimeoutError:
+                logger.warning(f"Model {model_name} timed out, trying next model")
+                continue
+            except Exception as e:
+                logger.warning(f"Model {model_name} failed with error: {e}, trying next model")
+                continue
+        
+        logger.error("All available models failed")
+        return None
     
     def _extract_sql_from_response(self, response: str) -> Optional[str]:
         """Extract SQL query from LLM response"""
