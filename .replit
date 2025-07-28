@@ -1,0 +1,30 @@
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["libxcrypt", "pgadmin4", "postgresql"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "NLP SQL Chatbot Server"
+
+[[workflows.workflow]]
+name = "NLP SQL Chatbot Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install fastapi uvicorn asyncpg sqlparse aiohttp python-multipart jinja2 && python main.py"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
