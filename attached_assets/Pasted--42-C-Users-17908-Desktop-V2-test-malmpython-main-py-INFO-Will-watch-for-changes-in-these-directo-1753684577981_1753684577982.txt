@@ -1,0 +1,61 @@
+(42) C:\Users\17908\Desktop\V2\test-malmpython main.py
+
+INFO Will watch for changes in these directories: ['C:\Users\{1798}\Desktop\\V2\\test-main"}
+
+Uviceco running on http://0.0.0.0:5000 (Press CTRL+C to quit) INFO
+
+INFO Started reloader process [17868) using Statßeload
+
+INFO: Started server process (18752]
+
+INFO: Maiting for application startup.
+
+ication falled for user postares" ERROR: database:Failed to create database connection pool: password authentication
+
+ERROR:min: Failed to initialize application: password authentication falled for user "postgres"
+
+INFQmain: Aculication shutdown completed
+
+ERROR: Traceback (most recent call last):
+
+"C:\Users\179881.conda\coys\v2\Lib\site-packages\starlette routing.py", line 694, In lifespan
+
+File async with self-lifespan context(app) as maxhe state
+
+File "C:\Users\17900).conda\envs\v2\Lib\contextlib.py", line 210, in achter
+
+return avait anext(self.geo)
+
+File "C:\Users\T7908\Desktop\V2\test-main/main.py", line 50, in lifespan
+
+walt db manager.connect()
+
+File "C:\Users\17908\Desktop\V2\test-main\database.py", line 43, in connect
+
+self.pool wait asyncog.create_pool(
+
+File "C:\Users\17908\.conda\envs\v2\lib\site-packages\asyncpg\pool.py", line 418, in async init
+
+walt self initialize()
+
+File "C:\Users\17908).conda\envs\v2\Lib\site-packages\asyncpg\pool.py", line 445, in initialize awalt first.ch.connect()
+
+File "C:\Users\T79081.conda\envs\v2\Lib\site-packages\asyncpy(pool.py", line 132, in connect
+
+self. conwalt self. pool. get new connection()
+
+File "C:\Users\T7908\.conda\envs\v2\Lib\site-packages\asyncpg\pool.py", line 517, in get pink connection con avait self.connect(
+
+File "C:\Users\17906\.conda\envs\v2\Lib\site-packages\asyncpg\connection.py", line 2421, in connect return awalt connect utils...connect(
+
+File "C:\Users\17908\.conde\envs\v2\Lib\site-packages\asyncng\connect utils.py", line 1849, in connect conn await connect adde(
+
+File "C:\Users\T7908\.conda\envs\v2\Lib\site-packages\asyncpg\connect_utils.py", line 386, in connect adde
+
+return awalt connect adde (params, True, "aces)
+
+File "C:\Users\77908\.conda\enva\v2\Lib\site-packages\asyncgg\connect utils.py", line 934, in connect adte
+
+awalt connected Asyncng.exceptions. InvalidPasswordError: password authentication falled for user "postgres"
+
+ERROR Application startup falled. Exiting.
