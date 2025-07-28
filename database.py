@@ -18,16 +18,22 @@ class DatabaseManager:
         # Try DATABASE_URL first (full connection string)
         database_url = os.getenv("DATABASE_URL")
         if database_url:
+            logger.info(f"Using DATABASE_URL connection")
             return {"dsn": database_url}
         
         # Fall back to individual parameters
-        return {
+        params = {
             "host": os.getenv("PGHOST", "localhost"),
             "port": int(os.getenv("PGPORT", "5432")),
             "database": os.getenv("PGDATABASE", "postgres"),
             "user": os.getenv("PGUSER", "postgres"),
-            "password": os.getenv("PGPASSWORD", "password")
+            "password": os.getenv("PGPASSWORD", "")
         }
+        
+        # Log connection attempt (without password)
+        logger.info(f"Using individual connection parameters: host={params['host']}, port={params['port']}, database={params['database']}, user={params['user']}")
+        
+        return params
     
     async def connect(self):
         """Create connection pool"""
