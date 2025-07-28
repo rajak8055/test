@@ -12,13 +12,13 @@ class GroqLLMService:
         self.api_key = os.getenv("GROQ_API_KEY", "")
         self.base_url = "https://api.groq.com/openai/v1/chat/completions"
         
-        # Try different models in order of preference
+        # Try different models in order of preference (updated list)
         self.available_models = [
-            "llama-3.1-70b-versatile",
-            "llama-3.1-8b-instant", 
-            "mixtral-8x7b-32768",
-            "llama3-70b-8192",
-            "gemma2-9b-it"
+            "llama-3.1-8b-instant",  # Primary - fast and available
+            "llama-3.2-90b-text-preview",  # High capability backup
+            "llama-3.2-11b-text-preview",  # Medium capability
+            "llama-3.2-3b-preview",  # Fast fallback
+            "gemma2-9b-it"  # Final fallback
         ]
         self.model = self.available_models[0]  # Start with the best model
         
@@ -46,29 +46,43 @@ class GroqLLMService:
             return None
     
     def _build_prompt(self, question: str, schema_context: str, additional_context: str = None) -> str:
-        """Build the prompt for the LLM"""
-        prompt = f"""You are an expert SQL developer. Convert the following natural language question into a PostgreSQL query.
+        """Build enhanced prompt for complex SQL generation"""
+        prompt = f"""You are an expert PostgreSQL database analyst specializing in manufacturing data analysis.
 
 {schema_context}
 
-IMPORTANT RULES:
+ADVANCED SQL GENERATION RULES:
 1. ONLY generate SELECT queries - no INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, or TRUNCATE
-2. Use proper PostgreSQL syntax
-3. For timestamp queries, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sssZ)
-4. When dealing with dates/timestamps, consider timezone handling
-5. Use appropriate JOIN clauses when multiple tables are involved
-6. Include proper WHERE clauses for filtering
-7. Use LIMIT when appropriate to avoid large result sets
-8. Return ONLY the SQL query, no explanations or additional text
-9. Do not use any dangerous functions or operations
-10. Ensure the query is safe and follows best practices
+2. Use sophisticated PostgreSQL features: JOINs, subqueries, CTEs (WITH clauses), window functions
+3. For complex questions, use multiple table JOINs and advanced aggregations
+4. Calculate metrics: efficiency rates, percentages, time differences, totals
+5. Handle timestamps with proper timezone awareness (ISO 8601 format)
+6. Use window functions for ranking, running totals, and comparisons
+7. Apply CASE statements for conditional logic and categorization
+8. Include date/time extractions: EXTRACT, DATE_TRUNC, AGE functions
+9. Use appropriate GROUP BY, HAVING, ORDER BY clauses
+10. Return ONLY the SQL query without explanations or formatting
+
+MANUFACTURING CONTEXT:
+- production_runs: Links machines, operations, shifts, operators with timestamps
+- quality_checks: Inspection results linked to production runs
+- machine_downtime: Maintenance and failure records with duration
+- Use JOINs to connect: machines→departments, runs→employees, etc.
+
+ADVANCED PATTERNS TO USE:
+- Multi-table JOINs: FROM production_runs pr JOIN machines m ON pr.machine_id = m.id
+- Time calculations: EXTRACT(EPOCH FROM (end_timestamp - start_timestamp))/3600 AS duration_hours
+- Efficiency calculations: (actual_units * 100.0 / planned_units) AS efficiency_percent
+- Window functions: ROW_NUMBER() OVER (PARTITION BY machine_id ORDER BY start_timestamp DESC)
+- Date filtering: WHERE start_timestamp >= CURRENT_DATE - INTERVAL '7 days'
+- CTEs for complex logic: WITH machine_stats AS (SELECT machine_id, COUNT(*) as runs...)
 
 Question: {question}"""
 
         if additional_context:
             prompt += f"\n\nAdditional Context: {additional_context}"
         
-        prompt += "\n\nSQL Query:"
+        prompt += "\n\nGenerate a comprehensive PostgreSQL query:"
         
         return prompt
     
@@ -90,15 +104,15 @@ Question: {question}"""
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are an expert PostgreSQL developer. Generate safe, efficient SELECT queries only. Return only the SQL query without any additional text or formatting."
+                        "content": "You are an expert PostgreSQL database analyst specializing in complex manufacturing data queries. Generate sophisticated SELECT queries using advanced SQL features like JOINs, subqueries, CTEs, window functions, and calculations. Return only the SQL query without explanations or formatting."
                     },
                     {
                         "role": "user", 
                         "content": prompt
                     }
                 ],
-                "max_tokens": 1000,
-                "temperature": 0.1,
+                "max_tokens": 1500,
+                "temperature": 0.2,
                 "top_p": 0.9,
                 "stream": False
             }
