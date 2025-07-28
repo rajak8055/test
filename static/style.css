@@ -35,6 +35,11 @@ body {
     grid-template-columns: 300px 1fr;
     gap: 20px;
     height: 100vh;
+    transition: grid-template-columns 0.3s ease;
+}
+
+.container.sidebar-collapsed {
+    grid-template-columns: 0px 1fr;
 }
 
 /* Header */
@@ -48,6 +53,30 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle:hover {
+    background: var(--background-color);
+    color: var(--primary-color);
 }
 
 .header h1 {
@@ -82,6 +111,18 @@ body {
     padding: 1.5rem;
     overflow-y: auto;
     max-height: calc(100vh - 140px);
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.schema-panel.collapsed {
+    opacity: 0;
+    transform: translateX(-100%);
+    width: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 .schema-panel h2 {
@@ -436,6 +477,77 @@ body {
 
 .mb-4 {
     margin-bottom: 1rem;
+}
+
+/* SQL Syntax Highlighting */
+.sql-query {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0.5rem 0;
+}
+
+.sql-query .sql-keyword {
+    color: #9f7efe;
+    font-weight: 600;
+}
+
+.sql-query .sql-string {
+    color: #68d391;
+}
+
+.sql-query .sql-number {
+    color: #fbb6ce;
+}
+
+.sql-query .sql-comment {
+    color: #a0aec0;
+    font-style: italic;
+}
+
+.sql-query .sql-function {
+    color: #63b3ed;
+}
+
+.sql-query .sql-operator {
+    color: #f687b3;
+}
+
+.sql-query .sql-identifier {
+    color: #e2e8f0;
+}
+
+.sql-copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.sql-container {
+    position: relative;
+}
+
+.sql-container:hover .sql-copy-button {
+    opacity: 1;
+}
+
+.sql-copy-button:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .mt-2 {

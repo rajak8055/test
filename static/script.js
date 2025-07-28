@@ -5,9 +5,13 @@ class NLPSQLChatbot {
         this.sendButton = document.getElementById('send-button');
         this.statusDot = document.querySelector('.status-dot');
         this.statusText = document.querySelector('.status-text');
+        this.sidebarToggle = document.getElementById('sidebar-toggle');
+        this.schemaPanel = document.getElementById('schema-panel');
+        this.container = document.querySelector('.container');
         
         this.messageId = 0;
         this.isLoading = false;
+        this.sidebarCollapsed = false;
         
         this.init();
     }
@@ -22,6 +26,9 @@ class NLPSQLChatbot {
             }
         });
         
+        // Sidebar toggle
+        this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        
         // Load database schema
         await this.loadDatabaseSchema();
         
@@ -30,6 +37,18 @@ class NLPSQLChatbot {
         
         // Add welcome message
         this.addMessage('assistant', 'Hello! I\'m your NLP to SQL assistant. Ask me questions about your database, and I\'ll convert them to SQL queries and show you the results.', null, null, null);
+    }
+    
+    toggleSidebar() {
+        this.sidebarCollapsed = !this.sidebarCollapsed;
+        
+        if (this.sidebarCollapsed) {
+            this.container.classList.add('sidebar-collapsed');
+            this.schemaPanel.classList.add('collapsed');
+        } else {
+            this.container.classList.remove('sidebar-collapsed');
+            this.schemaPanel.classList.remove('collapsed');
+        }
     }
     
     async checkSystemHealth() {
@@ -179,10 +198,12 @@ class NLPSQLChatbot {
             `;
             
             if (sqlQuery) {
+                const formattedSQL = this.formatSQL(sqlQuery);
+                const highlightedSQL = this.highlightSQL(formattedSQL);
                 messageHTML += `
-                    <div class="sql-query">
-                        <button class="copy-button" onclick="this.parentElement.querySelector('code').select(); document.execCommand('copy')">Copy</button>
-                        <code>${this.escapeHtml(sqlQuery)}</code>
+                    <div class="sql-container">
+                        <div class="sql-query">${highlightedSQL}</div>
+                        <button class="sql-copy-button" data-sql="${this.escapeHtml(sqlQuery)}">Copy</button>
                     </div>
                 `;
             }
@@ -278,6 +299,79 @@ class NLPSQLChatbot {
         div.textContent = text;
         return div.innerHTML;
     }
+    
+    formatSQL(sqlQuery) {
+        // Format SQL with proper indentation and line breaks
+        let formatted = sqlQuery
+            .replace(/\bSELECT\b/gi, '\nSELECT')
+            .replace(/\bFROM\b/gi, '\nFROM')
+            .replace(/\bWHERE\b/gi, '\nWHERE')
+            .replace(/\bJOIN\b/gi, '\nJOIN')
+            .replace(/\bINNER JOIN\b/gi, '\nINNER JOIN')
+            .replace(/\bLEFT JOIN\b/gi, '\nLEFT JOIN')
+            .replace(/\bRIGHT JOIN\b/gi, '\nRIGHT JOIN')
+            .replace(/\bFULL JOIN\b/gi, '\nFULL JOIN')
+            .replace(/\bON\b/gi, '\n  ON')
+            .replace(/\bORDER BY\b/gi, '\nORDER BY')
+            .replace(/\bGROUP BY\b/gi, '\nGROUP BY')
+            .replace(/\bHAVING\b/gi, '\nHAVING')
+            .replace(/\bWITH\b/gi, 'WITH')
+            .replace(/\bAS\b/gi, '\n  AS')
+            .replace(/,(\s*)(?=\w)/g, ',\n  ')
+            .trim();
+        
+        return formatted;
+    }
+    
+    highlightSQL(sqlQuery) {
+        const keywords = [
+            'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'OUTER',
+            'ON', 'ORDER', 'BY', 'GROUP', 'HAVING', 'AS', 'AND', 'OR', 'NOT', 'IN', 'EXISTS',
+            'LIKE', 'BETWEEN', 'IS', 'NULL', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'DISTINCT',
+            'TOP', 'LIMIT', 'OFFSET', 'UNION', 'ALL', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END',
+            'WITH', 'RECURSIVE', 'OVER', 'PARTITION', 'ROW_NUMBER', 'RANK', 'DENSE_RANK',
+            'ASC', 'DESC'
+        ];
+        
+        const functions = [
+            'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'UPPER', 'LOWER', 'SUBSTRING',
+            'CONCAT', 'COALESCE', 'CAST', 'CONVERT', 'DATEPART', 'DATEDIFF', 'GETDATE',
+            'NOW', 'EXTRACT', 'DATE_TRUNC', 'ROW_NUMBER', 'RANK', 'DENSE_RANK'
+        ];
+        
+        let highlighted = this.escapeHtml(sqlQuery);
+        
+        // Highlight keywords
+        keywords.forEach(keyword => {
+            const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+            highlighted = highlighted.replace(regex, `<span class="sql-keyword">${keyword.toUpperCase()}</span>`);
+        });
+        
+        // Highlight functions
+        functions.forEach(func => {
+            const regex = new RegExp(`\\b${func}\\s*\\(`, 'gi');
+            highlighted = highlighted.replace(regex, (match) => {
+                const funcName = match.replace(/\s*\(/, '');
+                return `<span class="sql-function">${funcName.toUpperCase()}</span>(`;
+            });
+        });
+        
+        // Highlight strings
+        highlighted = highlighted.replace(/'([^']*)'/g, `<span class="sql-string">'$1'</span>`);
+        
+        // Highlight numbers
+        highlighted = highlighted.replace(/\b(\d+(?:\.\d+)?)\b/g, `<span class="sql-number">$1</span>`);
+        
+        // Highlight operators
+        const operators = ['=', '!=', '<>', '<', '>', '<=', '>=', '+', '-', '*', '/', '%'];
+        operators.forEach(op => {
+            const escapedOp = op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\s(${escapedOp})\\s`, 'g');
+            highlighted = highlighted.replace(regex, ` <span class="sql-operator">${op}</span> `);
+        });
+        
+        return highlighted;
+    }
 }
 
 // Example queries suggestions
@@ -307,10 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Add copy functionality for SQL queries
 document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('copy-button')) {
-        const codeElement = e.target.parentElement.querySelector('code');
-        if (codeElement) {
-            navigator.clipboard.writeText(codeElement.textContent).then(() => {
+    if (e.target.classList.contains('sql-copy-button')) {
+        const sqlQuery = e.target.getAttribute('data-sql');
+        if (sqlQuery) {
+            navigator.clipboard.writeText(sqlQuery).then(() => {
                 e.target.textContent = 'Copied!';
                 setTimeout(() => {
                     e.target.textContent = 'Copy';
