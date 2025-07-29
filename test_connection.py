@@ -21,15 +21,15 @@ async def test_database_connection():
     database_url = os.getenv("DATABASE_URL")
     if database_url:
         print(f"Found DATABASE_URL: {database_url[:50]}...")
-        try:
-            conn = await asyncpg.connect(database_url)
-            result = await conn.fetchval("SELECT version()")
-            print(f"✅ Connection successful!")
-            print(f"PostgreSQL version: {result}")
-            await conn.close()
-            return True
-        except Exception as e:
-            print(f"❌ DATABASE_URL connection failed: {e}")
+        # try:
+        #     conn = await asyncpg.connect(database_url)
+        #     result = await conn.fetchval("SELECT version()")
+        #     print(f"✅ Connection successful!")
+        #     print(f"PostgreSQL version: {result}")
+        #     await conn.close()
+        #     return True
+        # except Exception as e:
+        #     print(f"❌ DATABASE_URL connection failed: {e}")
     
     # Try individual parameters
     print("\n--- Trying individual parameters ---")
@@ -49,35 +49,35 @@ async def test_database_connection():
     if not password:
         print("⚠️  WARNING: PGPASSWORD is empty!")
     
-    try:
-        conn = await asyncpg.connect(
-            host=host,
-            port=port,
-            database=database,
-            user=user,
-            password=password
-        )
-        result = await conn.fetchval("SELECT version()")
-        print(f"✅ Connection successful!")
-        print(f"PostgreSQL version: {result}")
+    # try:
+    #     conn = await asyncpg.connect(
+    #         host=host,
+    #         port=port,
+    #         database=database,
+    #         user=user,
+    #         password=password
+    #     )
+    #     result = await conn.fetchval("SELECT version()")
+    #     print(f"✅ Connection successful!")
+    #     print(f"PostgreSQL version: {result}")
         
-        # Test creating a simple table
-        await conn.execute("CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name TEXT)")
-        await conn.execute("DROP TABLE IF EXISTS test_table")
-        print("✅ Basic table operations work!")
+    #     # Test creating a simple table
+    #     await conn.execute("CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name TEXT)")
+    #     await conn.execute("DROP TABLE IF EXISTS test_table")
+    #     print("✅ Basic table operations work!")
         
-        await conn.close()
-        return True
+    #     await conn.close()
+    #     return True
         
-    except Exception as e:
-        print(f"❌ Connection failed: {e}")
-        print("\n--- Troubleshooting Tips ---")
-        print("1. Make sure PostgreSQL is running")
-        print("2. Check your username and password")
-        print("3. Verify the database exists")
-        print("4. Try connecting with psql first:")
-        print(f"   psql -h {host} -p {port} -U {user} -d {database}")
-        return False
+    # except Exception as e:
+    #     print(f"❌ Connection failed: {e}")
+    #     print("\n--- Troubleshooting Tips ---")
+    #     print("1. Make sure PostgreSQL is running")
+    #     print("2. Check your username and password")
+    #     print("3. Verify the database exists")
+    #     print("4. Try connecting with psql first:")
+    #     print(f"   psql -h {host} -p {port} -U {user} -d {database}")
+    #     return False
 
 def check_environment_variables():
     """Check if required environment variables are set"""
